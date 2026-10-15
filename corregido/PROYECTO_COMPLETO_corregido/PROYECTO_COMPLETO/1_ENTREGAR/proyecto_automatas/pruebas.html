@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <title>Pruebas automáticas</title>
+
+  <style>
+    body {
+      font: 15px system-ui;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 12px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    td,
+    th {
+      border: 1px solid #ccc;
+      padding: 5px 8px;
+    }
+
+    th {
+      background: #6c5ce7;
+      color: #fff;
+    }
+
+    .ok {
+      color: #00a86b;
+      font-weight: 700;
+    }
+
+    .bad {
+      color: #d63031;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Título y contenedores del resultado -->
+  <h2>🧪 Pruebas automáticas de la lógica (Fase 2)</h2>
+  <p id="res"></p>
+  <table id="t">
+    <tr><th>Prueba</th><th>Resultado</th><th>Detalle</th></tr>
+  </table>
+
+  <!-- Lógica y definición de las pruebas -->
+  <script src="logica.js"></script>
+  <script src="pruebas.js"></script>
+
+  <!-- Ejecución y pintado de resultados -->
+  <script>
+    const R = correrPruebas(),
+          ok = R.filter(r => r.ok).length;
+
+    // Resumen: "X de Y pruebas pasando"
+    document.getElementById('res').innerHTML =
+      `<b class="${ok == R.length ? 'ok' : 'bad'}">${ok} de ${R.length} pruebas pasando</b>`;
+
+    // Una fila por prueba
+    document.getElementById('t').innerHTML += R.map(r =>
+      `<tr><td>${r.n}</td><td class="${r.ok ? 'ok' : 'bad'}">${r.ok ? '✔ Aprueba' : '✘ NO Aprueba'}</td><td>${r.det}</td></tr>`
+    ).join('');
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Simulador de Autómatas</title>
+
+  <style>
+    /* ==========================================================
+       1. VARIABLES Y BASE
+       ========================================================== */
+    :root {
+      --a: #6c5ce7;
+      --b: #00b8d9;
+      --c: #ff6b9d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font: 15px/1.5 system-ui, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #fdf2f8);
+      color: #2d3436;
+    }
+
+    /* ==========================================================
+       2. ANIMACIONES
+       ========================================================== */
+    @keyframes mv {
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes in {
+      from { opacity: 0; transform: translateY(12px); }
+    }
+
+    @keyframes pl {
+      50% { transform: translateX(6px); }
+    }
+
+    /* ==========================================================
+       3. ENCABEZADO Y FLUJO (AFND ➜ AFD ➜ ER ➜ Verificado)
+       ========================================================== */
+    header {
+      background: linear-gradient(120deg, #6c5ce7, #00b8d9, #ff6b9d);
+      background-size: 220% 220%;
+      animation: mv 8s ease infinite;
+      color: #fff;
+      padding: 26px 16px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    header p {
+      margin: 6px 0 12px;
+      opacity: .95;
+    }
+
+    .flow {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: #ffffff33;
+      border: 2px solid #fff;
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-weight: 700;
+    }
+
+    .arr {
+      font-size: 22px;
+      animation: pl 1.2s infinite;
+    }
+
+    /* ==========================================================
+       4. CONTENEDOR Y NAVEGACIÓN
+       ========================================================== */
+    .wrap {
+      max-width: 1100px;
+      margin: auto;
+      padding: 12px;
+    }
+
+    nav {
+      text-align: center;
+      margin: 8px 0;
+    }
+
+    /* ==========================================================
+       5. TARJETAS INFORMATIVAS
+       ========================================================== */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 14px #0001;
+      border-top: 5px solid var(--a);
+      transition: .25s;
+      animation: in .6s;
+    }
+
+    .card:nth-child(2) { border-color: var(--b); }
+    .card:nth-child(3) { border-color: var(--c); }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 22px #0002;
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+    }
+
+    /* ==========================================================
+       6. SECCIONES DESPLEGABLES (details / summary)
+       ========================================================== */
+    details {
+      background: #fff;
+      border-radius: 14px;
+      margin: 12px 0;
+      box-shadow: 0 4px 14px #0001;
+      overflow: hidden;
+      animation: in .5s;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 17px;
+      list-style: none;
+      background: linear-gradient(90deg, #f1efff, #fff);
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::before {
+      content: '▶';
+      display: inline-block;
+      margin-right: 10px;
+      color: var(--a);
+      transition: .25s;
+    }
+
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+
+    .body {
+      padding: 12px 16px;
+    }
+
+    .g {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    /* ==========================================================
+       7. FORMULARIOS Y BOTONES
+       ========================================================== */
+    input,
+    textarea,
+    select {
+      font: inherit;
+      width: 100%;
+      border: 2px solid #ddd6fe;
+      border-radius: 8px;
+      padding: 6px 8px;
+      transition: .2s;
+    }
+
+    select {
+      width: auto;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: 0;
+      border-color: var(--b);
+      box-shadow: 0 0 0 3px #00b8d933;
+    }
+
+    button {
+      font: inherit;
+      background: linear-gradient(135deg, var(--a), var(--b));
+      color: #fff;
+      border: 0;
+      border-radius: 20px;
+      padding: 7px 16px;
+      cursor: pointer;
+      margin: 3px;
+      transition: .2s;
+    }
+
+    button:hover {
+      transform: scale(1.07);
+      box-shadow: 0 4px 12px #6c5ce766;
+    }
+
+    button:active {
+      transform: scale(.97);
+    }
+
+    button.alt {
+      background: linear-gradient(135deg, var(--c), #feca57);
+    }
+
+    /* ==========================================================
+       8. TABLAS
+       ========================================================== */
+    table {
+      border-collapse: collapse;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    td,
+    th {
+      border: 1px solid #e0e7ff;
+      padding: 5px 12px;
+    }
+
+    th {
+      background: linear-gradient(135deg, var(--a), var(--b));
+      color: #fff;
+    }
+
+    tr:hover td {
+      background: #f5f3ff;
+    }
+
+    .hl,
+    tr.hl td {
+      background: #fff3b0 !important;
+    }
+
+    /* ==========================================================
+       9. SALIDAS: PASOS, CÓDIGO, GRAFOS
+       ========================================================== */
+    pre {
+      white-space: pre-wrap;
+      margin: 4px 0;
+      background: #f8f9ff;
+      border-left: 4px solid var(--b);
+      border-radius: 6px;
+      padding: 5px 9px;
+      animation: in .3s;
+      font: inherit;
+    }
+
+    code {
+      background: #f1efff;
+      padding: 1px 6px;
+      border-radius: 5px;
+    }
+
+    svg {
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid #e0e7ff;
+      max-width: 100%;
+    }
+
+    /* ==========================================================
+       10. UTILIDADES (mensajes, ER, avisos, pie)
+       ========================================================== */
+    .bad {
+      color: #d63031;
+      font-weight: 600;
+    }
+
+    .ok {
+      color: #00a86b;
+      font-weight: 700;
+    }
+
+    .er {
+      font-size: 18px;
+      background: #f1efff;
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: inline-block;
+    }
+
+    .tip {
+      background: #fff8e1;
+      border-left: 4px solid #feca57;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin: 8px 0;
+    }
+
+    footer {
+      text-align: center;
+      opacity: .7;
+      padding: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ==========================================================
+       ENCABEZADO
+       ========================================================== -->
+  <header>
+    <h1>🤖 Simulador de Autómatas</h1>
+    <p>Teoría de la Computación · Parcial del segundo corte</p>
+    <div class="flow"><span class="chip">AFND</span><span class="arr">➜</span><span class="chip">AFD</span><span class="arr">➜</span><span class="chip">Expresión Regular</span><span class="arr">➜</span><span class="chip">✔ Verificado</span></div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ========================================================
+         NAVEGACIÓN
+         ======================================================== -->
+    <nav><button onclick="ir('s1')">✏️ Editor</button><button onclick="ir('s2')">🔄 Módulo 1</button><button onclick="ir('s3')">🧮 Módulo 2</button><button onclick="ir('s4')" class="alt">✅ Verificador</button></nav>
+
+    <!-- ========================================================
+         TARJETAS INFORMATIVAS
+         ======================================================== -->
+    <div class="cards">
+      <div class="card">
+        <h3>🎯 ¿De qué trata?</h3>
+        Un autómata finito es una máquina que acepta o rechaza cadenas. Esta app toma un autómata no determinista (AFND), lo vuelve determinista (AFD), saca la expresión regular (ER) de su lenguaje y comprueba que los tres coinciden.
+      </div>
+      <div class="card">
+        <h3>🧩 ¿Qué vamos a hacer?</h3>
+        1) Escribir un autómata. 2) Convertirlo con el método de subconjuntos. 3) Obtener la ER con ecuaciones y reglas. 4) Verificar con todas las cadenas hasta la longitud n.
+      </div>
+      <div class="card">
+        <h3>🛠️ ¿Cómo lo hacemos?</h3>
+        Todo corre en este archivo, sin internet ni servidor. Cada módulo tiene un paso a paso que explica qué conjunto se procesa y qué regla se aplica, y los grafos se dibujan con la notación de clase.
+      </div>
+    </div>
+
+    <!-- ========================================================
+         AYUDA 1: GUÍA RÁPIDA
+         ======================================================== -->
+    <details id="s0">
+      <summary>📘 Guía rápida: qué usar para qué</summary>
+      <div class="body">
+        <table>
+          <tr><th>Elemento</th><th>Úsalo para</th></tr>
+          <tr><td>Botones de ejemplo</td><td>Cargar el Caso 1 (AFND→AFD), el Caso 2 (AF→ER) o uno con ε</td></tr>
+          <tr><td>Campos del editor</td><td>Definir estados, alfabeto, inicial y finales separados por coma</td></tr>
+          <tr><td>Cuadro de transiciones</td><td>Una por línea con el formato <code>origen,símbolo,destino</code>; ε se escribe <code>ε</code> o <code>eps</code></td></tr>
+          <tr><td>Convertir</td><td>Obtener la tabla, el AFD y sus grafos</td></tr>
+          <tr><td>◀ Anterior / Siguiente ▶ / Todo</td><td>Recorrer cada paso de la conversión o de la ER</td></tr>
+          <tr><td>Origen (Módulo 2)</td><td>Elegir si la ER sale del AFD del Módulo 1 o del autómata del editor</td></tr>
+          <tr><td>Verificar</td><td>Comparar AFND, AFD y ER con todas las cadenas hasta n</td></tr>
+        </table>
+        <div class="tip"><b>Glosario:</b>
+          <div><b>AFND</b> puede tener varias salidas por símbolo </div>
+          <div><b>AFD</b> tiene exactamente una salida </div>
+          <div><b>∅</b> es el estado pozo, del que no se sale </div>
+          <div><b>ε</b> es una transición sin leer símbolo </div>
+          <div><b>λ</b> es la cadena vacía </div>
+          <div>Doble círculo = estado final </div>
+          <div>Flecha suelta = estado inicial.</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- ========================================================
+         AYUDA 2: EJEMPLO PASO A PASO
+         ======================================================== -->
+    <details id="s0b">
+      <summary>🧪 Ejemplo paso a paso: qué escribir y qué debe dar (Caso 1)</summary>
+      <div class="body">
+        <p><b>Paso 1.</b> En el Editor pulsa <b>Limpiar todo</b> y llena los campos así:</p>
+        <table>
+          <tr><th>Campo</th><th>Escribe</th></tr>
+          <tr><td>Estados</td><td><code>q0,q1,q2</code></td></tr>
+          <tr><td>Alfabeto</td><td><code>a,b</code></td></tr>
+          <tr><td>Inicial</td><td><code>q0</code></td></tr>
+          <tr><td>Finales</td><td><code>q2</code></td></tr>
+          <tr><td>Transiciones (una por línea)</td><td><code>q0,a,q0</code> · <code>q0,a,q1</code> · <code>q1,b,q2</code></td></tr>
+        </table>
+
+        <p><b>Paso 2.</b> En el Módulo 1 pulsa <b>Convertir</b>. Debe salir este AFD (4 estados):</p>
+        <table>
+          <tr><th>Estado</th><th>a</th><th>b</th></tr>
+          <tr><td>→ {q0}</td><td>{q0,q1}</td><td>∅</td></tr>
+          <tr><td>{q0,q1}</td><td>{q0,q1}</td><td>{q2}</td></tr>
+          <tr><td>* {q2}</td><td>∅</td><td>∅</td></tr>
+          <tr><td>∅ (pozo)</td><td>∅</td><td>∅</td></tr>
+        </table>
+
+        <p><b>Paso 3.</b> Pulsa <b>Siguiente ▶</b> hasta el final y compara cada paso con tu cuaderno.</p>
+        <p><b>Paso 4.</b> En el Módulo 2 deja <i>AFD del Módulo 1</i> y pulsa <b>Obtener ER</b>. Verás las reglas aplicadas y una ER final.</p>
+        <p><b>Paso 5.</b> En el Verificador pulsa <b>Verificar</b> con n = 6. Debe aparecer ✔ equivalencia.</p>
+        <p><b>Segundo ejemplo (Caso 2, AF→ER):</b> Estados <code>q0,q1,q2</code> · Alfabeto <code>x,y</code> · Inicial <code>q0</code> · Final <code>q1</code> · Transiciones <code>q0,x,q1</code> <code>q1,x,q2</code> <code>q2,y,q2</code> <code>q2,y,q1</code>. La ER debe ser equivalente a <code>x(xy*y)*</code>; el verificador lo confirma.</p>
+
+        <button onclick="ej(0);ir('s1')">📗 Cargar este ejemplo en el editor</button><button onclick="ej(1);ir('s1')">📘 Cargar el Caso 2</button>
+      </div>
+    </details>
+
+    <!-- ========================================================
+         SECCIÓN 1: EDITOR DEL AFND
+         ======================================================== -->
+    <details id="s1" open>
+      <summary>✏️ 1. Editor del AFND</summary>
+      <div class="body">
+        <div class="tip"><b>Qué hacer aquí:</b> describir el autómata de partida. Pulsa <b>Limpiar</b> para empezar de cero, escribe los 5 datos (o carga un ejemplo) y sigue al Módulo 1. <b>No hay que calcular nada:</b> solo definir el AFND.</div>
+
+        <div class="g">
+          <div>Estados (separados por coma)<input id="est" placeholder="Ej: q0,q1,q2"></div>
+          <div>Alfabeto<input id="alf" placeholder="Ej: a,b (un carácter por símbolo)"></div>
+          <div>Inicial<input id="ini" placeholder="Ej: q0 (solo uno)"></div>
+          <div>Finales<input id="fin" placeholder="Ej: q2 (uno o varios)"></div>
+        </div>
+
+        <p>Transiciones, una por línea: <code>origen,símbolo,destino</code></p>
+        <textarea id="tr" rows="6" placeholder="q0,a,q0&#10;q0,a,q1&#10;q1,b,q2"></textarea>
+
+        <button onclick="ej(0)">📗 Caso 1 (AFND→AFD)</button><button onclick="ej(1)">📘 Caso 2 (AF→ER)</button><button onclick="ej(2)" class="alt">⭐ Ejemplo con ε (bonus)</button><button onclick="limpiar()" style="background:#636e72">🧹 Limpiar todo</button>
+      </div>
+    </details>
+
+    <!-- ========================================================
+         SECCIÓN 2: MÓDULO 1 (AFND → AFD)
+         ======================================================== -->
+    <details id="s2" open>
+      <summary>🔄 2. Módulo 1: AFND → AFD</summary>
+      <div class="body">
+        <div class="tip"><b>Qué hacer aquí:</b> pulsar <b>Convertir</b>. Verás el AFND y el AFD dibujados, la tabla de conversión y, con <b>Siguiente ▶</b>, cada paso explicado. Compara la tabla con la de tu cuaderno.</div>
+
+        <button onclick="m1()">▶ Convertir</button><span id="e1" class="bad"></span>
+
+        <div class="g">
+          <div><b>AFND</b><div id="g1"></div></div>
+          <div><b>AFD</b><div id="g2"></div></div>
+        </div>
+
+        <p><b>Tabla de conversión</b> (→ inicial, * final)</p>
+        <div id="tabla"></div>
+
+        <p><b>Paso a paso</b></p>
+        <div id="p1"></div>
+      </div>
+    </details>
+
+    <!-- ========================================================
+         SECCIÓN 3: MÓDULO 2 (AF → EXPRESIÓN REGULAR)
+         ======================================================== -->
+    <details id="s3" open>
+      <summary>🧮 3. Módulo 2: AF → Expresión Regular</summary>
+      <div class="body">
+        <div class="tip"><b>Qué hacer aquí:</b> elegir el origen y pulsar <b>Obtener ER</b>. Verás una ecuación por estado, cada regla aplicada con su nombre y, al final, la expresión regular.</div>
+
+        Origen: <select id="org"><option value="1">AFD del Módulo 1</option><option value="2">Autómata del editor (sin ε)</option></select>
+        <button onclick="m2()">▶ Obtener ER</button><span id="e2" class="bad"></span>
+
+        <p><b>ER final:</b> <code id="er" class="er"></code></p>
+        <div id="p2"></div>
+      </div>
+    </details>
+
+    <!-- ========================================================
+         SECCIÓN 4: VERIFICADOR DE EQUIVALENCIA
+         ======================================================== -->
+    <details id="s4" open>
+      <summary>✅ 4. Verificador de equivalencia</summary>
+      <div class="body">
+        <div class="tip"><b>Qué hacer aquí:</b> pulsar <b>Verificar</b>. La app prueba todas las cadenas hasta la longitud n y debe decir que AFND, AFD y ER aceptan lo mismo. Si no, te muestra la cadena donde difieren.</div>
+
+        Longitud máxima n (mínimo 6): <input id="n" type="number" value="6" min="6" style="width:80px">
+        <button onclick="verif()" class="alt">✔ Verificar AFND = AFD = ER</button>
+        <div id="rv"></div>
+      </div>
+    </details>
+
+    <!-- ========================================================
+         PIE DE PÁGINA
+         ======================================================== -->
+    <footer>Equipo: David, Danna y Damer · Teoría de la Computación · UniAutónoma</footer>
+
+  </div>
+
+  <!-- ==========================================================
+       SCRIPTS (orden importante: primero la lógica, luego la interfaz)
+       ========================================================== -->
+  <script src="logica.js"></script>
+  <script src="app.js"></script>
+
+</body>
+
+</html>
